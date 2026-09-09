@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🚀 Rosie's Rocket Dash 🚀</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: radial-gradient(ellipse at center, #1b0c3f 0%, #05010f 70%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Trebuchet MS', 'Comic Sans MS', Verdana, sans-serif;
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  h1 {
+    color: #fff;
+    text-align: center;
+    margin: 10px 0 4px 0;
+    font-size: 2em;
+    background: linear-gradient(90deg, #ff6ec7, #ffd93d, #6bffb8, #6ec6ff, #c56bff);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow 6s ease infinite;
+    text-shadow: 0 0 20px rgba(255,255,255,0.2);
+    letter-spacing: 1px;
+  }
+
+  @keyframes rainbow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  #gameWrap {
+    position: relative;
+    border-radius: 18px;
+    padding: 4px;
+    background: linear-gradient(45deg, #ff6ec7, #6ec6ff, #ffd93d, #6bffb8);
+    background-size: 300% 300%;
+    animation: rainbow 8s ease infinite;
+    box-shadow: 0 0 40px rgba(255, 110, 199, 0.5), 0 0 80px rgba(110, 198, 255, 0.3);
+  }
+
+  canvas {
+    display: block;
+    border-radius: 15px;
+    background: #05010f;
+    touch-action: none;
+  }
+
+  #hud {
+    position: absolute;
+    top: 14px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 18px;
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(0,0,0,0.8);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  #score { color: #ffd93d; }
+  #lives { color: #ff6ec7; }
+
+  #overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(5, 1, 15, 0.85);
+    border-radius: 15px;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    z-index: 10;
+  }
+
+  #overlay.hidden { display: none; }
+
+  #overlay h2 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    background: linear-gradient(90deg, #ff6ec7, #ffd93d, #6bffb8, #6ec6ff);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow 5s ease infinite;
+  }
+
+  #overlay p {
+    font-size: 1.05em;
+    margin: 6px 0;
+    max-width: 380px;
+    line-height: 1.4;
+  }
+
+  .bigBtn {
+    margin-top: 18px;
+    padding: 14px 34px;
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #05010f;
+    background: linear-gradient(90deg, #ffd93d, #6bffb8);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #b8890b, 0 8px 20px rgba(0,0,0,0.5);
+    transition: transform 0.08s ease;
+  }
+  .bigBtn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #b8890b, 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  #instructions {
+    color: #cfc9ff;
+    margin-top: 14px;
+    font-size: 0.95em;
+    text-align: center;
+    max-width: 480px;
+    line-height: 1.5;
+  }
+
+  .key {
+    display: inline-block;
+    background: #2a1a55;
+    border: 2px solid #6ec6ff;
+    border-radius: 6px;
+    padding: 2px 8px;
+    margin: 0 2px;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  #touchControls {
+    display: none;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 480px;
+    margin-top: 14px;
+    gap: 10px;
+  }
+
+  .tbtn {
+    flex: 1;
+    padding: 18px 0;
+    font-size: 1.6em;
+    background: linear-gradient(180deg, #6ec6ff, #4a7fd6);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    box-shadow: 0 5px 0 #2c4f8a;
+    user-select: none;
+  }
+  .tbtn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #2c4f8a;
+  }
+
+  @media (max-width: 560px) {
+    #touchControls { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🚀 Rosie's Rocket Dash 🚀</h1>
+
+<div id="gameWrap">
+  <div id="hud">
+    <div id="score">⭐ Score: 0</div>
+    <div id="lives">❤️❤️❤️</div>
+  </div>
+  <canvas id="game" width="480" height="640"></canvas>
+
+  <div id="overlay">
+    <h2>Ready, Astronaut?</h2>
+    <p>Steer your rocket through space with the <span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> arrow keys.</p>
+    <p>Dodge the tumbling space rocks ☄️, grab the shiny stars ⭐ for points, and scoop up power-ups for shields 🛡️ and speed boosts ⚡!</p>
+    <button class="bigBtn" id="startBtn">Blast Off! 🚀</button>
+  </div>
+</div>
+
+<div id="instructions">
+  Use the arrow keys to fly. On a phone or tablet, use the on-screen buttons or swipe/tap!
+</div>
+
+<div id="touchControls">
+  <button class="tbtn" id="btnLeft">◀</button>
+  <button class="tbtn" id="btnUp">▲</button>
+  <button class="tbtn" id="btnDown">▼</button>
+  <button class="tbtn" id="btnRight">▶</button>
+</div>
+
+<script>
+(function () {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const scoreEl = document.getElementById('score');
+  const livesEl = document.getElementById('lives');
+  const overlay = document.getElementById('overlay');
+  const startBtn = document.getElementById('startBtn');
+
+  // ---------- Utility ----------
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+  function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+  function dist(x1, y1, x2, y2) { return Math.hypot(x1 - x2, y1 - y2); }
+
+  const COLORS = ['#ff6ec7', '#6ec6ff', '#ffd93d', '#6bffb8', '#c56bff', '#ff9d6c'];
+
+  // ---------- Background starfield ----------
+  const bgStars = [];
+  for (let i = 0; i < 90; i++) {
+    bgStars.push({
+      x: rand(0, W), y: rand(0, H), r: rand(0.5, 2.2),
+      speed: rand(0.3, 1.6), tw: rand(0, Math.PI * 2)
+    });
+  }
+
+  // ---------- Rocket (player) ----------
+  const rocket = {
+    x: W / 2, y: H - 90, w: 40, h: 54,
+    speed: 5.4, boostSpeed: 8.6,
+    shield: 0, // frames of shield remaining
+    boost: 0,  // frames of boost remaining
+    invuln: 0, // frames of blink-invulnerability after hit
+    flameTick: 0
+  };
+
+  const keys = { left: false, right: false, up: false, down: false };
+
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
+    if (e.key === 'ArrowLeft') keys.left = true;
+    if (e.key === 'ArrowRight') keys.right = true;
+    if (e.key === 'ArrowUp') keys.up = true;
+    if (e.key === 'ArrowDown') keys.down = true;
+    if ((e.key === 'Enter' || e.key === ' ') && !running) startGame();
+  }, { passive: false });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft') keys.left = false;
+    if (e.key === 'ArrowRight') keys.right = false;
+    if (e.key === 'ArrowUp') keys.up = false;
+    if (e.key === 'ArrowDown') keys.down = false;
+  });
+
+  // Touch buttons
+  function bindHold(id, prop) {
+    const el = document.getElementById(id);
+    const set = (v) => (e) => { e.preventDefault(); keys[prop] = v; };
+    el.addEventListener('touchstart', set(true), { passive: false });
+    el.addEventListener('touchend', set(false), { passive: false });
+    el.addEventListener('mousedown', set(true));
+    el.addEventListener('mouseup', set(false));
+    el.addEventListener('mouseleave', set(false));
+  }
+  bindHold('btnLeft', 'left');
+  bindHold('btnRight', 'right');
+  bindHold('btnUp', 'up');
+  bindHold('btnDown', 'down');
+
+  // Swipe-drag control directly on canvas
+  let dragging = false, dragX = 0, dragY = 0;
+  canvas.addEventListener('touchstart', (e) => {
+    dragging = true;
+    const t = e.touches[0];
+    dragX = t.clientX; dragY = t.clientY;
+  }, { passive: true });
+  canvas.addEventListener('touchmove', (e) => {
+    if (!dragging) return;
+    const t = e.touches[0];
+    const dx = t.clientX - dragX, dy = t.clientY - dragY;
+    const scaleX = W / canvas.clientWidth, scaleY = H / canvas.clientHeight;
+    rocket.x += dx * scaleX;
+    rocket.y += dy * scaleY;
+    dragX = t.clientX; dragY = t.clientY;
+  }, { passive: true });
+  canvas.addEventListener('touchend', () => (dragging = false));
+
+  // ---------- Entities ----------
+  let rocks = [];
+  let stars = [];
+  let powerups = [];
+  let particles = [];
+
+  let score = 0;
+  let lives = 3;
+  let running = false;
+  let frame = 0;
+  let spawnTimer = 0;
+  let starTimer = 0;
+  let powerTimer = 0;
+  let difficulty = 1;
+
+  function resetGame() {
+    rocks = []; stars = []; powerups = []; particles = [];
+    score = 0; lives = 3; frame = 0; difficulty = 1;
+    spawnTimer = 0; starTimer = 0; powerTimer = 0;
+    rocket.x = W / 2; rocket.y = H - 90;
+    rocket.shield = 0; rocket.boost = 0; rocket.invuln = 90;
+    updateHud();
+  }
+
+  function updateHud() {
+    scoreEl.textContent = '⭐ Score: ' + score;
+    let hearts = '';
+    for (let i = 0; i < lives; i++) hearts += '❤️';
+    if (lives <= 0) hearts = '💀';
+    livesEl.textContent = hearts;
+  }
+
+  function spawnRock() {
+    const r = rand(16, 34);
+    rocks.push({
+      x: rand(r, W - r), y: -r,
+      r,
+      vy: rand(1.6, 2.6) * difficulty,
+      vx: rand(-0.6, 0.6),
+      rot: rand(0, Math.PI * 2),
+      vrot: rand(-0.05, 0.05),
+      color: '#8a7a6a',
+      wobbleSeed: rand(0, Math.PI * 2)
+    });
+  }
+
+  function spawnStar() {
+    stars.push({
+      x: rand(20, W - 20), y: -20,
+      r: 12, vy: rand(2, 3),
+      spin: rand(0, Math.PI * 2),
+      color: '#ffd93d'
+    });
+  }
+
+  function spawnPowerup() {
+    const type = Math.random() < 0.5 ? 'shield' : 'boost';
+    powerups.push({
+      x: rand(24, W - 24), y: -20, r: 15,
+      vy: 2.2, type
+    });
+  }
+
+  function spawnParticles(x, y, color, count = 14) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: rand(-4, 4), vy: rand(-4, 4),
+        life: rand(20, 40), maxLife: 40,
+        color, r: rand(2, 4)
+      });
+    }
+  }
+
+  // ---------- Update ----------
+  function update() {
+    frame++;
+    difficulty = 1 + score / 400;
+
+    // Rocket movement
+    const spd = rocket.boost > 0 ? rocket.boostSpeed : rocket.speed;
+    if (keys.left) rocket.x -= spd;
+    if (keys.right) rocket.x += spd;
+    if (keys.up) rocket.y -= spd;
+    if (keys.down) rocket.y += spd;
+
+    rocket.x = Math.max(rocket.w / 2, Math.min(W - rocket.w / 2, rocket.x));
+    rocket.y = Math.max(rocket.h / 2, Math.min(H - rocket.h / 2, rocket.y));
+
+    if (rocket.shield > 0) rocket.shield--;
+    if (rocket.boost > 0) rocket.boost--;
+    if (rocket.invuln > 0) rocket.invuln--;
+    rocket.flameTick++;
+
+    // Spawning
+    spawnTimer++;
+    const spawnInterval = Math.max(18, 46 - difficulty * 6);
+    if (spawnTimer > spawnInterval) {
+      spawnTimer = 0;
+      spawnRock();
+      if (difficulty > 2 && Math.random() < 0.3) spawnRock();
+    }
+
+    starTimer++;
+    if (starTimer > 70) {
+      starTimer = 0;
+      if (Math.random() < 0.8) spawnStar();
+    }
+
+    powerTimer++;
+    if (powerTimer > 480) {
+      powerTimer = 0;
+      spawnPowerup();
+    }
+
+    // Update rocks
+    for (const rk of rocks) {
+      rk.y += rk.vy;
+      rk.x += rk.vx + Math.sin((frame + rk.wobbleSeed) * 0.03) * 0.4;
+      rk.rot += rk.vrot;
+    }
+    rocks = rocks.filter((rk) => rk.y - rk.r < H + 40);
+
+    // Update stars
+    for (const s of stars) {
+      s.y += s.vy;
+      s.spin += 0.08;
+    }
+    stars = stars.filter((s) => s.y - s.r < H + 20);
+
+    // Update powerups
+    for (const p of powerups) p.y += p.vy;
+    powerups = powerups.filter((p) => p.y - p.r < H + 20);
+
+    // Update particles
+    for (const pt of particles) {
+      pt.x += pt.vx; pt.y += pt.vy;
+      pt.vx *= 0.95; pt.vy *= 0.95;
+      pt.life--;
+    }
+    particles = particles.filter((pt) => pt.life > 0);
+
+    // Background stars scroll
+    for (const b of bgStars) {
+      b.y += b.speed;
+      b.tw += 0.05;
+      if (b.y > H) { b.y = 0; b.x = rand(0, W); }
+    }
+
+    // Collisions: rocks vs rocket
+    if (rocket.invuln <= 0) {
+      for (let i = rocks.length - 1; i >= 0; i--) {
+        const rk = rocks[i];
+        if (dist(rk.x, rk.y, rocket.x, rocket.y) < rk.r + 16) {
+          if (rocket.shield > 0) {
+            spawnParticles(rocket.x, rocket.y, '#6ec6ff', 20);
+            rocks.splice(i, 1);
+            rocket.invuln = 30;
+          } else {
+            spawnParticles(rocket.x, rocket.y, '#ff6ec7', 26);
+            rocks.splice(i, 1);
+            lives--;
+            rocket.invuln = 100;
+            updateHud();
+            if (lives <= 0) {
+              gameOver();
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    // Collisions: stars vs rocket
+    for (let i = stars.length - 1; i >= 0; i--) {
+      const s = stars[i];
+      if (dist(s.x, s.y, rocket.x, rocket.y) < s.r + 16) {
+        score += 10;
+        spawnParticles(s.x, s.y, '#ffd93d', 12);
+        stars.splice(i, 1);
+        updateHud();
+      }
+    }
+
+    // Collisions: powerups vs rocket
+    for (let i = powerups.length - 1; i >= 0; i--) {
+      const p = powerups[i];
+      if (dist(p.x, p.y, rocket.x, rocket.y) < p.r + 16) {
+        if (p.type === 'shield') { rocket.shield = 360; spawnParticles(p.x, p.y, '#6ec6ff', 18); }
+        else { rocket.boost = 240; spawnParticles(p.x, p.y, '#6bffb8', 18); }
+        powerups.splice(i, 1);
+        score += 5;
+        updateHud();
+      }
+    }
+
+    // Passive score for survival
+    if (frame % 30 === 0) { score += 1; updateHud(); }
+  }
+
+  // ---------- Draw ----------
+  function drawBackground() {
+    ctx.fillStyle = '#05010f';
+    ctx.fillRect(0, 0, W, H);
+    for (const b of bgStars) {
+      const alpha = 0.5 + 0.5 * Math.sin(b.tw);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawRocket() {
+    if (rocket.invuln > 0 && Math.floor(rocket.invuln / 5) % 2 === 0) return; // blink
+
+    ctx.save();
+    ctx.translate(rocket.x, rocket.y);
+
+    // Flame
+    const flameLen = 14 + Math.sin(rocket.flameTick * 0.6) * 5 + (rocket.boost > 0 ? 10 : 0);
+    const flameGrad = ctx.createLinearGradient(0, rocket.h / 2, 0, rocket.h / 2 + flameLen);
+    flameGrad.addColorStop(0, '#ffd93d');
+    flameGrad.addColorStop(1, 'rgba(255,110,60,0)');
+    ctx.fillStyle = flameGrad;
+    ctx.beginPath();
+    ctx.moveTo(-8, rocket.h / 2 - 4);
+    ctx.lineTo(8, rocket.h / 2 - 4);
+    ctx.lineTo(0, rocket.h / 2 + flameLen);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shield bubble
+    if (rocket.shield > 0) {
+      ctx.beginPath();
+      ctx.arc(0, 0, 32, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(110,198,255,0.8)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(110,198,255,0.12)';
+      ctx.fill();
+    }
+
+    // Body
+    ctx.beginPath();
+    ctx.moveTo(0, -rocket.h / 2);
+    ctx.quadraticCurveTo(rocket.w / 2, -rocket.h / 4, rocket.w / 2 - 4, rocket.h / 2 - 10);
+    ctx.lineTo(rocket.w / 2 - 8, rocket.h / 2);
+    ctx.lineTo(-rocket.w / 2 + 8, rocket.h / 2);
+    ctx.lineTo(-rocket.w / 2 + 4, rocket.h / 2 - 10);
+    ctx.quadraticCurveTo(-rocket.w / 2, -rocket.h / 4, 0, -rocket.h / 2);
+    ctx.closePath();
+    const bodyGrad = ctx.createLinearGradient(-rocket.w / 2, 0, rocket.w / 2, 0);
+    bodyGrad.addColorStop(0, '#ff9dd6');
+    bodyGrad.addColorStop(0.5, '#ffffff');
+    bodyGrad.addColorStop(1, '#6ec6ff');
+    ctx.fillStyle = bodyGrad;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#c56bff';
+    ctx.stroke();
+
+    // Window
+    ctx.beginPath();
+    ctx.arc(0, -6, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#2a1a55';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, -6, 5.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#a8e8ff';
+    ctx.fill();
+
+    // Fins
+    ctx.fillStyle = '#ff6ec7';
+    ctx.beginPath();
+    ctx.moveTo(-rocket.w / 2 + 4, rocket.h / 2 - 14);
+    ctx.lineTo(-rocket.w / 2 - 12, rocket.h / 2 + 6);
+    ctx.lineTo(-rocket.w / 2 + 6, rocket.h / 2 - 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(rocket.w / 2 - 4, rocket.h / 2 - 14);
+    ctx.lineTo(rocket.w / 2 + 12, rocket.h / 2 + 6);
+    ctx.lineTo(rocket.w / 2 - 6, rocket.h / 2 - 2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawRock(rk) {
+    ctx.save();
+    ctx.translate(rk.x, rk.y);
+    ctx.rotate(rk.rot);
+    ctx.beginPath();
+    const spikes = 8;
+    for (let i = 0; i < spikes; i++) {
+      const ang = (i / spikes) * Math.PI * 2;
+      const rr = rk.r * (0.8 + 0.2 * Math.sin(i * 3 + rk.wobbleSeed));
+      const px = Math.cos(ang) * rr, py = Math.sin(ang) * rr;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    const grad = ctx.createRadialGradient(-rk.r / 3, -rk.r / 3, rk.r / 6, 0, 0, rk.r);
+    grad.addColorStop(0, '#c9a98a');
+    grad.addColorStop(1, '#6b5644');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.strokeStyle = '#4a3a2c';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawStar(s) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate(s.spin);
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const outerAng = (i / 5) * Math.PI * 2 - Math.PI / 2;
+      const innerAng = outerAng + Math.PI / 5;
+      const ox = Math.cos(outerAng) * s.r, oy = Math.sin(outerAng) * s.r;
+      const ix = Math.cos(innerAng) * (s.r / 2.4), iy = Math.sin(innerAng) * (s.r / 2.4);
+      if (i === 0) ctx.moveTo(ox, oy); else ctx.lineTo(ox, oy);
+      ctx.lineTo(ix, iy);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#ffd93d';
+    ctx.shadowColor = '#ffd93d';
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawPowerup(p) {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.beginPath();
+    ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.type === 'shield' ? '#6ec6ff' : '#6bffb8';
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 14;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#05010f';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(p.type === 'shield' ? '🛡' : '⚡', 0, 1);
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const pt of particles) {
+      ctx.globalAlpha = pt.life / pt.maxLife;
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function draw() {
+    drawBackground();
+    for (const rk of rocks) drawRock(rk);
+    for (const s of stars) drawStar(s);
+    for (const p of powerups) drawPowerup(p);
+    drawParticles();
+    drawRocket();
+  }
+
+  // ---------- Loop ----------
+  function loop() {
+    if (!running) return;
+    update();
+    if (!running) return; // gameOver may have stopped it mid-update
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function startGame() {
+    resetGame();
+    overlay.classList.add('hidden');
+    running = true;
+    requestAnimationFrame(loop);
+  }
+
+  function gameOver() {
+    running = false;
+    updateHud();
+    draw();
+    overlay.innerHTML = `
+      <h2>Boom! Great Flight! 💥</h2>
+      <p>Final Score: <strong style="color:#ffd93d;font-size:1.3em;">${score}</strong></p>
+      <p>${score >= 200 ? "Amazing piloting, space captain! 🌟" : "Nice try! Grab more stars and dodge those rocks!"}</p>
+      <button class="bigBtn" id="startBtn2">Fly Again 🚀</button>
+    `;
+    overlay.classList.remove('hidden');
+    document.getElementById('startBtn2').addEventListener('click', startGame);
+  }
+
+  startBtn.addEventListener('click', startGame);
+
+  // Idle background animation before start
+  function idleDraw() {
+    if (running) return;
+    for (const b of bgStars) {
+      b.y += b.speed * 0.4;
+      b.tw += 0.05;
+      if (b.y > H) { b.y = 0; b.x = rand(0, W); }
+    }
+    drawBackground();
+    drawRocket();
+    requestAnimationFrame(idleDraw);
+  }
+  idleDraw();
+})();
+</script>
+</body>
+</html>
